@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>변호사시험 답안 작성 시뮬레이터 (CBT 기준)</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --muted-color: #6c757d;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --danger-bg: #f8d7da;
+            --danger-text: #721c24;
+            --warning-bg: #fff3cd;
+            --warning-text: #856404;
+            --monospace-font: "Nanum Gothic Coding", Consolas, 'Courier New', monospace; /* 나눔고딕코딩 필수 */
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+             /* Increased max-width significantly to allow wider textarea based on larger cols */
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: var(--text-color);
+            font-size: 16px;
+        }
+        h1 { text-align: center; color: var(--primary-color); margin-bottom: 10px;}
+        h2 { text-align: center; color: #333; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
+        .description { text-align: center; font-size: 0.9em; color: var(--muted-color); margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #555;}
+        .textarea-container { margin-bottom: 10px; }
+        textarea {
+            /* === Visual Wrapping Logic - Using adjusted cols attribute === */
+            font-family: var(--monospace-font); /* Monospace Font is essential */
+            /* width: auto; /* Let cols determine width */
+            /* Removed width: calc(...) */
+            /* Removed width: 49ch; */
+            /* ========================================================== */
+            min-height: 450px;
+            height: 60vh;
+            margin-top: 5px;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 15px; /* Font size affects visual width */
+            line-height: 1.65;
+            background-color: #fff;
+            color: #333;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            box-sizing: border-box; /* Keep this */
+             overflow-x: hidden; /* Prevent horizontal scrollbar if cols makes it too wide */
+        }
+        .textarea-note { font-size: 0.85em; color: var(--warning-text); background-color: var(--warning-bg); margin-top: 5px; display: block; padding: 8px; border: 1px solid #ffeeba; border-radius: 4px; }
+        textarea::placeholder { font-style: italic; color: #aaa; }
+        input[type=number] {
+            width: 180px; margin-top: 5px; padding: 10px; font-size: 1em;
+            border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box;
+        }
+        .input-grid { display: flex; justify-content: center; margin-bottom: 25px; }
+        .input-group { margin-bottom: 0; }
+        .input-group small { font-size: 0.8em; color: var(--muted-color); display: block; margin-top: 3px;}
+        button {
+            display: block; width: 100%; max-width: 400px; margin: 30px auto 0 auto;
+            padding: 14px 20px; cursor: pointer; background-color: var(--primary-color);
+            color: white; border: none; border-radius: 5px; font-size: 1.15em;
+            font-weight: bold; transition: background-color 0.2s ease;
+        }
+        button:hover { background-color: #004494; }
+
+        /* Results Area */
+        .results-container { margin-top: 35px; background-color: var(--secondary-color); padding: 25px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .result-item { background-color: #fff; padding: 18px; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .result-item h3 { margin-top: 0; font-size: 1.05em; color: var(--primary-color); margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; }
+        .result-item p { margin: 8px 0; font-size: 1em; line-height: 1.6; color: #343a40; }
+        .result-item strong { font-size: 1.1em; color: var(--text-color); }
+        .result-item ul { padding-left: 20px; margin-top: 5px; margin-bottom: 10px;}
+        .result-item li { margin-bottom: 5px; }
+        .error { color: var(--danger-text); font-weight: bold; margin: 20px 0; text-align: center; background-color: var(--danger-bg); padding: 12px; border: 1px solid #f5c6cb; border-radius: 4px; }
+        /* Comparison span styles */
+        .efficiency-result { font-weight: bold; padding: 3px 6px; border-radius: 4px; display: inline-block; margin-left: 5px; }
+        .time-available { background-color: var(--success-bg); color: var(--success-text); }
+        .time-exceeded { background-color: var(--danger-bg); color: var(--danger-text); }
+        .note { display: block; margin-top: 8px; font-size: 0.85em; color: var(--muted-color); line-height: 1.4;}
+
+    </style>
+    <!-- Ensure Nanum Gothic Coding font is loaded -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>변호사시험 답안 작성 시뮬레이터 (CBT 기준)</h1>
+    <p class="description">
+        답안 텍스트와 타자 속도를 입력하여 예상 소요 시간, 답안 분량, 분량 기준 표준 시간, 그리고 확보 가능한 사고/구상 시간 등을 계산합니다.<br>
+        ※ 답안지 기준 (CBT 근사치): 줄 당 <strong>{{ chars_per_line_const }}</strong>자 (음절 기준), 페이지 당 <strong>{{ lines_per_page_const }}</strong>줄, 100점 당 <strong>{{ '%d'|format(lines_per_100_points_const) }}</strong>줄 / <strong>{{ '%d'|format(minutes_per_100_points_const) }}</strong>분
+    </p>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+        <div class="textarea-container">
+            <label for="text_input">답안 텍스트 입력:</label>
+            <!-- Using adjusted cols="89" based on empirical estimation (49 * (49/27)) -->
+            <!-- This is a GUESS and might need further adjustment -->
+            <textarea id="text_input" name="text_input" required cols="89" placeholder="여기에 변호사시험 답안 내용을 입력하거나 붙여넣으세요...">{{ text_input or '' }}</textarea>
+            <!-- VERY IMPORTANT NOTE -->
+            <span class="textarea-note"><strong>⚠️ 시각적 줄바꿈 안내:</strong> 고정폭 글꼴('나눔고딕코딩') 사용 시, 한 줄에 약 {{ chars_per_line_const }}개의 한글 음절이 보이도록 <strong>너비를 경험적으로 조정(cols=89 추정)</strong>했습니다. 이는 사용자의 브라우저, OS, 글꼴 렌더링 방식에 따라 <strong>실제 보이는 글자 수와 다를 수 있으며 완벽하지 않습니다.</strong> 시각적인 부분은 참고용이며, <strong>모든 계산(예상 줄 수, 페이지 수 등)은 입력된 텍스트 기준, 음절 수 {{ chars_per_line_const }}자 초과 시 또는 엔터 입력 시 다음 줄로 넘어가는 것을 기준으로 정확하게 이루어집니다.</strong></span>
+        </div>
+
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="typing_speed">타자 속도 (타수 - 분당 글자 수):</label>
+                <input type="number" id="typing_speed" name="typing_speed" min="1" required placeholder="예: 450" value="{{ typing_speed or '' }}">
+            </div>
+        </div>
+
+        <div>
+            <button type="submit">결과 계산하기</button>
+        </div>
+    </form>
+
+    {% if calculation_done %}
+    <div class="results-container">
+        <h2>📊 계산 결과</h2>
+        <div class="results-grid">
+
+            <!-- Volume Metrics -->
+            <div class="result-item">
+                <h3>답안 분량 분석</h3>
+                <p>총 글자 수: <strong>{{ char_count }}</strong> 자</p>
+                <p>예상 줄 수 ({{ chars_per_line_const }}음절/줄 기준): <strong>{{ estimated_lines }}</strong> 줄</p>
+                <p>예상 페이지 수 ({{ lines_per_page_const }}줄/페이지 기준): <strong>{{ "%.1f"|format(estimated_pages) }}</strong> 페이지</p>
+                <p>예상 배점 분량: <strong>{{ "%.1f"|format(estimated_score) }}</strong> 점</p>
+            </div>
+
+            <!-- Time Metrics -->
+            <div class="result-item">
+                 <h3>예상 시간 분석</h3>
+                 <p>① 순수 타이핑 소요 시간:</p>
+                 <ul>
+                    <li><strong>{{ typing_time_minutes }}분 {{ "{:.0f}".format(typing_time_remainder_seconds) }}초</strong></li>
+                    <li>(총 {{ "%.2f"|format(typing_time_total_seconds) }} 초)</li>
+                 </ul>
+                 <p>② 해당 분량 기준 표준 시간:</p>
+                 <ul>
+                     <li><strong>{{ standard_time_minutes }}분 {{ "{:.0f}".format(standard_time_remainder_seconds) }}초</strong></li>
+                     <li>({{ "%.1f"|format(estimated_score) }}점 기준)</li>
+                 </ul>
+            </div>
+
+             <!-- Efficiency/Thinking Time Analysis -->
+            <div class="result-item">
+                <h3>⏳ 시간 효율성 분석 (기준 시간 대비)</h3>
+                 {% if diff_vs_standard_seconds is not none %}
+                    {% if diff_vs_standard_seconds >= 0 %}
+                        <p>✅ 확보된 사고/구상 시간 (추정):
+                            <span class="efficiency-result time-available">
+                                {{ diff_vs_standard_minutes_abs }}분 {{ "{:.0f}".format(diff_vs_standard_seconds_abs) }}초
+                            </span>
+                        </p>
+                        <span class="note">해당 분량의 표준 시간 내에서, 순수 타이핑 시간을 제외하고 문제 독해, 생각, 검토 등에 사용할 수 있는 예상 시간입니다.</span>
+                    {% else %}
+                         <p>❌ 타이핑만으로 기준 시간 초과:
+                            <span class="efficiency-result time-exceeded">
+                                {{ diff_vs_standard_minutes_abs }}분 {{ "{:.0f}".format(diff_vs_standard_seconds_abs) }}초 부족
+                            </span>
+                        </p>
+                         <span class="note">해당 분량을 표준 시간 내에 작성하기에는 순수 타이핑 시간만으로도 부족합니다. 타자 속도를 높이거나 답안 분량을 조절해야 할 수 있습니다.</span>
+                    {% endif %}
+                 {% else %}
+                     <p style="color: var(--muted-color); font-style: italic;">(분량이 없어 시간 비교 불가)</p>
+                 {% endif %}
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+</html>
